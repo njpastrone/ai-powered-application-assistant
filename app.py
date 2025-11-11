@@ -382,26 +382,6 @@ else:
 
 st.divider()
 
-# Job details
-st.subheader("Job Details")
-
-company_name = st.text_input("Company Name:")
-role_title = st.text_input("Role/Position Title:")
-
-job_description = st.text_area(
-    "Job Description (optional but recommended):",
-    height=150,
-    help="Paste the job description here for better-tailored cover letters."
-)
-
-why_want_job = st.text_area(
-    "Why do you want this job? (rough notes are fine):",
-    height=150,
-    help="Be honest and specific. This will be refined into professional cover letter language."
-)
-
-st.divider()
-
 # Preferences
 st.subheader("Preferences")
 
@@ -427,6 +407,26 @@ with col2:
         index=0,
         help="Match the tone to the company culture"
     )
+
+st.divider()
+
+# Job details
+st.subheader("Job Details")
+
+company_name = st.text_input("Company Name:")
+role_title = st.text_input("Role/Position Title:")
+
+job_description = st.text_area(
+    "Job Description (optional but recommended):",
+    height=150,
+    help="Paste the job description here for better-tailored cover letters."
+)
+
+why_want_job = st.text_area(
+    "Why do you want this job? (rough notes are fine):",
+    height=150,
+    help="Be honest and specific. This will be refined into professional cover letter language."
+)
 
 # Generate button
 if st.button("Generate Cover Letter", type="primary"):
