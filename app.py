@@ -134,17 +134,39 @@ def generate_cover_letter(resume_text, candidate_name, candidate_address, compan
         "confident": "Use a bold, direct tone that emphasizes your unique value proposition. Be assertive about your capabilities without arrogance. Focus on what you bring to the table. Ideal for competitive roles and leadership positions."
     }
 
-    jd_context = ""
-    if job_description:
-        jd_context = f"\nHere is the job description:\n{job_description}\n"
+    # Build prompt with XML tags for better structure and clarity
+    prompt = f"""<instructions>
+<length_requirement>
+{length_instructions.get(length, length_instructions["concise"])}
+</length_requirement>
 
-    prompt = f"""You are a professional cover letter writer. Generate a cover letter following this exact structure:
+<tone_requirement>
+{tone_instructions.get(tone, tone_instructions["conversational"])}
+</tone_requirement>
 
-IMPORTANT INSTRUCTIONS:
-- {length_instructions.get(length, length_instructions["concise"])}
-- {tone_instructions.get(tone, tone_instructions["conversational"])}
+<additional_requirements>
+- Do not use emojis
+- Make the letter specific to this candidate and company
+- Use concrete examples from the resume
+- Do not include any XML tags, brackets, or meta-instructions in your output
+- Output only the final cover letter text
+</additional_requirements>
+</instructions>
 
-STRUCTURE:
+<resume>
+{resume_text}
+</resume>
+
+<job_description>
+{job_description if job_description else "No job description provided. Focus on general fit with the company and role."}
+</job_description>
+
+<candidate_motivation>
+{why_want_job}
+</candidate_motivation>
+
+<output_format>
+The cover letter must follow this exact structure:
 
 Date: {datetime.now().strftime("%B %d, %Y")}
 
@@ -157,28 +179,33 @@ Hiring Manager
 
 Dear Hiring Manager:
 
-First Paragraph (Introduction): State why you are writing and include the exact title of the position ({role_title}). If applicable, mention any company connections.
+[First paragraph: State why you are writing and include the exact title of the position: {role_title}. If applicable, mention any company connections.]
 
-Second Paragraph (Fit with Job): Describe what the candidate offers based on their resume. Provide specific examples of how their qualifications match the job requirements. Use work, classroom, or organizational experiences. Expand on resume details without repeating them verbatim.
+[Second paragraph: Describe what the candidate offers based on their resume. Provide specific examples of how their qualifications match the job requirements. Use work, classroom, or organizational experiences. Expand on resume details without repeating them verbatim.]
 
-Third Paragraph (Fit with Company): Establish synergy between the candidate and {company_name}. Include values, traits, corporate culture, or commitment to diversity that align with the candidate's profile.
+[Third paragraph: Establish synergy between the candidate and {company_name}. Include values, traits, corporate culture, or commitment to diversity that align with the candidate's profile.]
 
-Final Paragraph (Closing): Reiterate interest in the position and express interest in an interview. Thank the employer for their time and consideration.
+[Final paragraph: Reiterate interest in the position and express interest in an interview. Thank the employer for their time and consideration.]
 
 Sincerely,
 
 
 {candidate_name}
+</output_format>
 
----
+Generate the complete cover letter now, following the output format exactly and applying all requirements. Replace all bracketed instructions with actual content."""
 
-Here is the candidate's resume:
-{resume_text}
-{jd_context}
-Here is why the candidate wants this job:
-{why_want_job}
+    # System message for role-setting
+    system_message = """You are an expert cover letter writer with 15 years of experience helping candidates land jobs at top companies across all industries. You excel at:
 
-Generate the complete cover letter now, following the structure exactly. Apply the specified tone and length requirements. Do not use emojis. Make it specific to this candidate and company."""
+- Identifying key resume highlights that match job requirements
+- Writing compelling narratives that showcase candidate strengths without exaggeration
+- Adapting tone and style precisely to company culture and industry norms
+- Maintaining appropriate length while maximizing impact and readability
+- Using specific examples and concrete achievements rather than generic statements
+- Crafting authentic, genuine language that sounds human and professional
+
+You understand that cover letters should be concise, focused, and tailored to demonstrate clear value to the employer."""
 
     # Initialize client inside function to avoid initialization issues
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -186,6 +213,7 @@ Generate the complete cover letter now, following the structure exactly. Apply t
     message = client.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=1500,
+        system=system_message,
         messages=[
             {"role": "user", "content": prompt}
         ]
