@@ -11,9 +11,11 @@ Your AI-powered job application toolkit. A simple Streamlit application that hel
 
 ### Resume Management
 - Save and reuse multiple resumes
-- Upload resumes as PDF or DOCX files
+- Upload resumes as PDF or DOCX files (original files are saved)
+- Download saved resume files anytime from sidebar
 - Auto-populate candidate information from saved resumes
 - Edit candidate address before generating
+- Support for both file uploads and pasted text
 
 ### Cover Letter Generation
 - Generate professional cover letters using Claude Haiku AI
@@ -67,7 +69,8 @@ Using Claude Haiku API costs approximately $0.0008 per cover letter generated (l
 
 - `app.py` - Main Streamlit application
 - `profile.json` - User profile with links and preferences (auto-generated)
-- `resumes.json` - Saved resumes (auto-generated)
+- `resumes.json` - Resume metadata and text (auto-generated)
+- `saved_resumes/` - Folder containing original PDF/DOCX resume files (auto-generated)
 - `cover_letters.json` - Saved cover letters (auto-generated)
 - `ratings.json` - Cover letter ratings for ML training (auto-generated)
 - `requirements.txt` - Python dependencies

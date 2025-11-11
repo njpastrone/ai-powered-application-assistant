@@ -15,6 +15,11 @@ RESUME_FILE = "resumes.json"
 COVER_LETTER_FILE = "cover_letters.json"
 RATINGS_FILE = "ratings.json"
 PROFILE_FILE = "profile.json"
+RESUME_FOLDER = "saved_resumes"
+
+# Create resume folder if it doesn't exist
+if not os.path.exists(RESUME_FOLDER):
+    os.makedirs(RESUME_FOLDER)
 
 
 def load_profile():
@@ -44,9 +49,18 @@ def load_resumes():
     return []
 
 
-def save_resume(resume_data):
-    """Save a new resume to the JSON file."""
+def save_resume(resume_data, file_bytes=None, file_name=None):
+    """Save a new resume to the JSON file and optionally save the file."""
     resumes = load_resumes()
+
+    # If file bytes provided, save the actual file
+    if file_bytes and file_name:
+        file_path = os.path.join(RESUME_FOLDER, file_name)
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+        resume_data["file_path"] = file_path
+        resume_data["file_name"] = file_name
+
     resumes.append(resume_data)
     with open(RESUME_FILE, "w") as f:
         json.dump(resumes, f, indent=2)
@@ -225,6 +239,17 @@ with st.sidebar:
             st.session_state["resume_text"] = selected_resume_data["resume_text"]
             st.session_state["candidate_name"] = selected_resume_data["name"]
             st.session_state["candidate_address"] = selected_resume_data["address"]
+
+            # Show download button if file exists
+            if selected_resume_data.get("file_path") and os.path.exists(selected_resume_data["file_path"]):
+                with open(selected_resume_data["file_path"], "rb") as f:
+                    st.download_button(
+                        label=f"Download {selected_resume_data.get('file_name', 'Resume')}",
+                        data=f.read(),
+                        file_name=selected_resume_data.get('file_name', 'resume.pdf'),
+                        mime="application/octet-stream",
+                        use_container_width=True
+                    )
     else:
         st.info("No saved resumes yet. Enter your first resume below.")
 
@@ -270,6 +295,8 @@ if upload_option == "Upload file":
                 resume_text = extract_text_from_docx(uploaded_file)
             st.success("Resume uploaded successfully!")
             st.session_state["resume_text"] = resume_text
+            st.session_state["uploaded_file"] = uploaded_file
+            st.session_state["uploaded_file_name"] = uploaded_file.name
         except Exception as e:
             st.error(f"Error reading file: {str(e)}")
             resume_text = ""
@@ -281,6 +308,9 @@ else:
         value=st.session_state.get("resume_text", ""),
         height=200
     )
+    # Clear uploaded file from session if pasting text
+    if "uploaded_file" in st.session_state:
+        del st.session_state["uploaded_file"]
 
 # Save resume button
 if st.button("Save Resume"):
@@ -291,9 +321,21 @@ if st.button("Save Resume"):
             "name": candidate_name,
             "address": candidate_address,
             "resume_text": resume_text,
-            "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M")
+            "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "source": "file" if "uploaded_file" in st.session_state else "text"
         }
-        save_resume(resume_data)
+
+        # Save file if uploaded
+        if "uploaded_file" in st.session_state and "uploaded_file_name" in st.session_state:
+            file_obj = st.session_state["uploaded_file"]
+            file_name = st.session_state["uploaded_file_name"]
+            # Generate unique filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            unique_file_name = f"{timestamp}_{file_name}"
+            save_resume(resume_data, file_obj.getvalue(), unique_file_name)
+        else:
+            save_resume(resume_data)
+
         st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
 
 st.divider()

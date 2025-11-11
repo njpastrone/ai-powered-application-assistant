@@ -3,6 +3,7 @@ resumes.json
 cover_letters.json
 ratings.json
 profile.json
+saved_resumes/
 __pycache__/
 *.pyc
 .streamlit/
