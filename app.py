@@ -251,7 +251,81 @@ with st.sidebar:
                         use_container_width=True
                     )
     else:
-        st.info("No saved resumes yet. Enter your first resume below.")
+        st.info("No saved resumes yet. Add your first resume below.")
+
+    st.divider()
+
+    # Candidate information in sidebar
+    st.header("Candidate Info")
+
+    candidate_name = st.text_input(
+        "Your Full Name:",
+        value=st.session_state.get("candidate_name", "")
+    )
+
+    candidate_address = st.text_area(
+        "Your Address (editable):",
+        value=st.session_state.get("candidate_address", ""),
+        height=80,
+        help="This will be auto-filled from saved resumes but you can edit it."
+    )
+
+    # Resume input with file upload option
+    with st.expander("Add/Update Resume", expanded=False):
+        upload_option = st.radio("How would you like to provide your resume?", ["Paste text", "Upload file"], horizontal=True)
+
+        if upload_option == "Upload file":
+            uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
+            if uploaded_file is not None:
+                try:
+                    if uploaded_file.name.endswith('.pdf'):
+                        resume_text = extract_text_from_pdf(uploaded_file)
+                    elif uploaded_file.name.endswith('.docx'):
+                        resume_text = extract_text_from_docx(uploaded_file)
+                    st.success("Resume uploaded successfully!")
+                    st.session_state["resume_text"] = resume_text
+                    st.session_state["uploaded_file"] = uploaded_file
+                    st.session_state["uploaded_file_name"] = uploaded_file.name
+                except Exception as e:
+                    st.error(f"Error reading file: {str(e)}")
+                    resume_text = ""
+            else:
+                resume_text = st.session_state.get("resume_text", "")
+        else:
+            resume_text = st.text_area(
+                "Your Resume (paste full resume text):",
+                value=st.session_state.get("resume_text", ""),
+                height=150
+            )
+            # Clear uploaded file from session if pasting text
+            if "uploaded_file" in st.session_state:
+                del st.session_state["uploaded_file"]
+
+        # Save resume button
+        if st.button("Save Resume", use_container_width=True):
+            if not all([candidate_name, candidate_address, resume_text]):
+                st.error("Please fill in name, address, and resume text to save.")
+            else:
+                resume_data = {
+                    "name": candidate_name,
+                    "address": candidate_address,
+                    "resume_text": resume_text,
+                    "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "source": "file" if "uploaded_file" in st.session_state else "text"
+                }
+
+                # Save file if uploaded
+                if "uploaded_file" in st.session_state and "uploaded_file_name" in st.session_state:
+                    file_obj = st.session_state["uploaded_file"]
+                    file_name = st.session_state["uploaded_file_name"]
+                    # Generate unique filename
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    unique_file_name = f"{timestamp}_{file_name}"
+                    save_resume(resume_data, file_obj.getvalue(), unique_file_name)
+                else:
+                    save_resume(resume_data)
+
+                st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
 
     st.divider()
     st.header("Cover Letter History")
@@ -265,83 +339,23 @@ with st.sidebar:
     else:
         st.info("No saved cover letters yet.")
 
-# Main form
+# Main area - Job Details and Cover Letter Generation
 st.header("Generate Cover Letter")
 
-# Candidate information
-candidate_name = st.text_input(
-    "Your Full Name:",
-    value=st.session_state.get("candidate_name", "")
-)
+# Get resume text from session (populated via sidebar)
+resume_text = st.session_state.get("resume_text", "")
+candidate_name = st.session_state.get("candidate_name", "")
+candidate_address = st.session_state.get("candidate_address", "")
 
-candidate_address = st.text_area(
-    "Your Address (editable):",
-    value=st.session_state.get("candidate_address", ""),
-    height=100,
-    help="This will be extracted from your resume but you can edit it."
-)
-
-# Resume input with file upload option
-st.subheader("Resume")
-upload_option = st.radio("How would you like to provide your resume?", ["Paste text", "Upload file"], horizontal=True)
-
-if upload_option == "Upload file":
-    uploaded_file = st.file_uploader("Upload your resume (PDF or DOCX)", type=["pdf", "docx"])
-    if uploaded_file is not None:
-        try:
-            if uploaded_file.name.endswith('.pdf'):
-                resume_text = extract_text_from_pdf(uploaded_file)
-            elif uploaded_file.name.endswith('.docx'):
-                resume_text = extract_text_from_docx(uploaded_file)
-            st.success("Resume uploaded successfully!")
-            st.session_state["resume_text"] = resume_text
-            st.session_state["uploaded_file"] = uploaded_file
-            st.session_state["uploaded_file_name"] = uploaded_file.name
-        except Exception as e:
-            st.error(f"Error reading file: {str(e)}")
-            resume_text = ""
-    else:
-        resume_text = st.session_state.get("resume_text", "")
+# Show status
+if not resume_text:
+    st.warning("Please add or select a resume from the sidebar to get started.")
 else:
-    resume_text = st.text_area(
-        "Your Resume (paste full resume text):",
-        value=st.session_state.get("resume_text", ""),
-        height=200
-    )
-    # Clear uploaded file from session if pasting text
-    if "uploaded_file" in st.session_state:
-        del st.session_state["uploaded_file"]
-
-# Save resume button
-if st.button("Save Resume"):
-    if not all([candidate_name, candidate_address, resume_text]):
-        st.error("Please fill in name, address, and resume text to save.")
-    else:
-        resume_data = {
-            "name": candidate_name,
-            "address": candidate_address,
-            "resume_text": resume_text,
-            "date_saved": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "source": "file" if "uploaded_file" in st.session_state else "text"
-        }
-
-        # Save file if uploaded
-        if "uploaded_file" in st.session_state and "uploaded_file_name" in st.session_state:
-            file_obj = st.session_state["uploaded_file"]
-            file_name = st.session_state["uploaded_file_name"]
-            # Generate unique filename
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            unique_file_name = f"{timestamp}_{file_name}"
-            save_resume(resume_data, file_obj.getvalue(), unique_file_name)
-        else:
-            save_resume(resume_data)
-
-        st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
+    st.success(f"Using resume for: {candidate_name if candidate_name else 'Unknown'}")
 
 st.divider()
 
 # Job details
-st.subheader("Job Details")
 
 company_name = st.text_input("Company Name:")
 role_title = st.text_input("Role/Position Title:")
