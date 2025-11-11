@@ -185,25 +185,8 @@ profile = load_profile()
 
 # Sidebar for profile and resume management
 with st.sidebar:
-    st.header("Your Profile")
-
-    # Section 1: Candidate Info
-    candidate_name = st.text_input(
-        "Your Full Name:",
-        value=st.session_state.get("candidate_name", "")
-    )
-
-    candidate_address = st.text_area(
-        "Your Address:",
-        value=st.session_state.get("candidate_address", ""),
-        height=80,
-        help="Auto-filled from saved resumes but you can edit it."
-    )
-
-    st.divider()
-
-    # Section 2: Resume Management
-    st.subheader("Resume Management")
+    # Section 1: Resume Management
+    st.header("Resume Management")
 
     # Load existing resumes
     saved_resumes = load_resumes()
@@ -301,6 +284,23 @@ with st.sidebar:
                     save_resume(resume_data)
 
                 st.success(f"Resume saved! You now have {len(load_resumes())} saved resume(s).")
+
+    st.divider()
+
+    # Section 2: Your Profile (Candidate Info)
+    st.header("Your Profile")
+
+    candidate_name = st.text_input(
+        "Your Full Name:",
+        value=st.session_state.get("candidate_name", "")
+    )
+
+    candidate_address = st.text_area(
+        "Your Address:",
+        value=st.session_state.get("candidate_address", ""),
+        height=80,
+        help="Auto-filled from saved resumes but you can edit it."
+    )
 
     st.divider()
 
