@@ -751,15 +751,19 @@ with st.sidebar:
 
     candidate_name = st.text_input(
         "Your Full Name:",
-        value=st.session_state.get("candidate_name", "")
+        value=st.session_state.get("candidate_name", ""),
+        key="candidate_name_input"
     )
+    st.session_state["candidate_name"] = candidate_name
 
     candidate_address = st.text_area(
         "Your Address:",
         value=st.session_state.get("candidate_address", ""),
         height=80,
-        help="Auto-filled from saved resumes but you can edit it."
+        help="Auto-filled from saved resumes but you can edit it.",
+        key="candidate_address_input"
     )
+    st.session_state["candidate_address"] = candidate_address
 
     st.divider()
 
@@ -952,20 +956,87 @@ st.divider()
 st.header("Enter Job Details")
 st.caption("Provide information about the job you're applying for")
 
-company_name = st.text_input("Company Name:")
-role_title = st.text_input("Role/Position Title:")
+# Action buttons
+action_col1, action_col2 = st.columns([1, 1])
+with action_col1:
+    if st.button("Use Sample Data", help="Fill in sample data to see how the app works"):
+        st.session_state["candidate_name"] = "Jane Smith"
+        st.session_state["candidate_address"] = "123 Main Street\nBoston, MA 02101"
+        st.session_state["resume_text"] = """Jane Smith
+123 Main Street, Boston, MA 02101
+jane.smith@email.com | (555) 123-4567
+
+EDUCATION
+Bachelor of Science in Computer Science, Boston University - May 2023
+GPA: 3.8/4.0
+
+EXPERIENCE
+Software Engineering Intern, TechCorp Inc. - Summer 2022
+- Built a data pipeline that reduced processing time by 60%
+- Collaborated with cross-functional teams to deliver features
+- Wrote unit tests achieving 95% code coverage
+
+Research Assistant, BU Computer Science Department - 2021-2023
+- Developed machine learning models for natural language processing
+- Published findings in undergraduate research symposium
+
+SKILLS
+Python, JavaScript, React, SQL, Git, AWS"""
+        st.session_state["company_name_sample"] = "Anthropic"
+        st.session_state["role_title_sample"] = "Software Engineer"
+        st.session_state["job_description_sample"] = """We're looking for a software engineer to join our team working on AI safety and research. You'll be building tools that help make AI systems more helpful, harmless, and honest.
+
+Requirements:
+- Strong programming skills in Python
+- Experience with modern web frameworks
+- Passion for AI safety and alignment
+- Excellent communication skills"""
+        st.session_state["why_want_job"] = "I'm passionate about AI safety and want to contribute to building more reliable and beneficial AI systems. My experience in machine learning research and software development would allow me to make meaningful contributions to Anthropic's mission."
+        st.success("Sample data loaded! Check the sidebar and form fields.")
+        st.rerun()
+
+with action_col2:
+    if st.button("Clear Form", help="Clear all fields and start fresh"):
+        # Clear all session state keys related to the form
+        keys_to_clear = [
+            "company_name_sample", "role_title_sample", "job_description_sample",
+            "why_want_job", "resume_text", "candidate_name", "candidate_address",
+            "company_name_key", "role_title_key", "job_description_key",
+            "additional_context_key", "resume_highlight_general", "why_want_job_input"
+        ]
+        for key in keys_to_clear:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.success("Form cleared!")
+        st.rerun()
+
+st.divider()
+
+company_name = st.text_input(
+    "Company Name:",
+    value=st.session_state.get("company_name_sample", ""),
+    key="company_name_key"
+)
+role_title = st.text_input(
+    "Role/Position Title:",
+    value=st.session_state.get("role_title_sample", ""),
+    key="role_title_key"
+)
 
 job_description = st.text_area(
     "Job Description (optional but recommended):",
+    value=st.session_state.get("job_description_sample", ""),
     height=150,
-    help="Paste the job description here for better-tailored cover letters."
+    help="Paste the job description here for better-tailored cover letters.",
+    key="job_description_key"
 )
 
 additional_context = st.text_area(
     "Additional Context (optional):",
     height=100,
     help='Any extra context for the AI. e.g., "This is a general application, not for a specific role" or "I\'m currently working at X and looking to transition to Y"',
-    placeholder='e.g., "This is a general application to the company, not a specific job posting."'
+    placeholder='e.g., "This is a general application to the company, not a specific job posting."',
+    key="additional_context_key"
 )
 
 resume_highlight = st.text_area(
