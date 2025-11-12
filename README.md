@@ -2,6 +2,8 @@
 
 Built by **Nicolo Pastrone**
 
+**Live App**: https://ai-powered-application-assistant.streamlit.app/
+
 Your intelligent companion for job applications. A Streamlit web application that helps you generate professional cover letters, answer application questions, and manage your job search materials using AI.
 
 ## Features
